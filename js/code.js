@@ -8,6 +8,62 @@ var animation = null;
 
 var walkarea = null;
 
+avaters = []
+
+function create_avater(name,position,scene){
+	//var avatar = "tiger";
+	//var avatar_scale = 1.5;
+
+	// // create material for the girl
+	// var mat = new RD.Material({
+	// 	textures: {
+	// 	 color: "girl/girl.png" }
+	// 	});
+	// mat.register("girl");
+
+	//create pivot point for the girl
+	var girl_pivot = new RD.SceneNode({
+		position: [-40,0,-12]
+	});
+
+	//create a mesh for the girl
+	var avatar = "tiger";
+	var avatar_scale = 1;
+	var girl = new RD.SceneNode({
+		scaling: avatar_scale,
+		mesh: avatar + "/" + avatar +".wbin",
+		material: "girl"
+	});
+	girl_pivot.addChild(girl);
+	girl.skeleton = new RD.Skeleton();
+	scene.root.addChild( girl_pivot );
+
+	var girl_selector = new RD.SceneNode({
+		position: [0,20,0],
+		mesh: "cube",
+		material: "girl",
+		scaling: [4,10,4],
+		name: "girl_selector2",
+		layers: 0b1000
+	});
+	girl_pivot.addChild( girl_selector );
+
+
+		//load some animations
+	function loadAnimation( name, url )
+	{
+		var anim = animations[name] = new RD.SkeletalAnimation();
+		anim.load(url);
+		return anim;
+	}
+	loadAnimation('tiger_walking', "data/"+avatar+"/walking.skanim")
+	loadAnimation('tiger_idle', "data/"+avatar+"/idle.skanim")
+
+	return [girl, girl_pivot]
+
+}
+
+
 function init()
 {
 	//create the rendering context
@@ -31,8 +87,8 @@ function init()
 
 	//global settings
 	var bg_color = [0.1,0.1,0.1,1];
-	var avatar = "girl";
-	var avatar_scale = 0.3;
+	
+	
 	//var avatar = "tiger";
 	//var avatar_scale = 1.5;
 
@@ -49,8 +105,10 @@ function init()
 	});
 
 	//create a mesh for the girl
+	var avatar = "girl";
+	var avatar_scale = 0.3;
 	var girl = new RD.SceneNode({
-		scaling: avatar_scale,
+		scaling: 0.3,
 		mesh: avatar + "/" + avatar +".wbin",
 		material: "girl"
 	});
@@ -67,6 +125,11 @@ function init()
 		layers: 0b1000
 	});
 	girl_pivot.addChild( girl_selector );
+
+	girl2_obj = create_avater("girl2",[0,60,0], scene)
+	girl2 = girl2_obj[0]
+	girl2_pivot = girl2_obj[1]
+	// avaters.push(girl2_obj[0])
 
 	walkarea = new WalkArea();
 	walkarea.addRect([-50,0,-30],80,50);
@@ -123,6 +186,36 @@ function init()
 		//renderer.render( scene, camera, [gizmo] ); //render gizmo on top
 	}
 
+
+	function update_avater(avatar_obj,obj_pivot,dt){
+		var t = getTime();
+		var anim = animations['tiger_idle'];
+		var time_factor = 1;
+		if(gl.keys["W"])
+		{
+			obj_pivot.moveLocal([0,0,1])
+			anim = animations['tiger_walking'];
+		}
+		else if(gl.keys["S"])
+		{
+			obj_pivot.moveLocal([0,0,-1])
+			anim = animations['tiger_walking'];
+			time_factor = -1;
+		}
+		if(gl.keys["A"])
+			obj_pivot.rotate(90*DEG2RAD*dt,[0,1,0]);
+		else if(gl.keys["D"])
+			obj_pivot.rotate(-90*DEG2RAD*dt,[0,1,0]);
+
+		var pos = obj_pivot.position;
+		var nearest_pos = walkarea.adjustPosition( pos );
+		obj_pivot.position = nearest_pos;
+
+		anim.assignTime( t * 0.001 * time_factor );
+		avatar_obj.skeleton.copyFrom(anim.skeleton)
+
+	}
+
 	//main update
 	context.onupdate = function(dt)
 	{
@@ -142,6 +235,7 @@ function init()
 		else if(gl.keys["DOWN"])
 		{
 			girl_pivot.moveLocal([0,0,-1]);
+
 			anim = animations.walking;
 			time_factor = -1;
 		}
@@ -158,6 +252,9 @@ function init()
 		anim.assignTime( t * 0.001 * time_factor );
 		//copy the skeleton in the animation to the character
 		character.skeleton.copyFrom( anim.skeleton );
+
+		update_avater(girl2, girl2_pivot,dt)
+
 	}
 
 	//user input ***********************
