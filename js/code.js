@@ -23,7 +23,7 @@ function create_avater(name,position,scene){
 
 	//create pivot point for the girl
 	var girl_pivot = new RD.SceneNode({
-		position: [-40,0,-12]
+		position: [-40,-35,-12]
 	});
 
 	//create a mesh for the girl
@@ -132,9 +132,9 @@ function init()
 	// avaters.push(girl2_obj[0])
 
 	walkarea = new WalkArea();
-	walkarea.addRect([-50,0,-30],80,50);
-	walkarea.addRect([-90,0,-10],80,20);
-	walkarea.addRect([-110,0,-30],40,50);
+	walkarea.addRect([-50,-35,-30],80,50);
+	walkarea.addRect([-90,-35,-10],80,20);
+	walkarea.addRect([-110,-35,-30],40,50);
 
 
 	character = girl;
