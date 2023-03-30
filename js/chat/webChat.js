@@ -2,13 +2,13 @@ var server = new  MyClient();
 if (false){
     var user_name=prompt("Please input your name","xuzhang")
     console.log(user_name)
-    var chat_room=prompt("Please input chat room","chat_room")
+    var chat_room=prompt("Please input chat room","tiger")
     console.log(chat_room)
 
 }
 else {
     user_name = "xuzhang_" + Math.round(Math.random()*1000000000000000).toString() 
-    chat_room = "chat_room" //"WEB-COMMUNICATIONS"
+    chat_room = "tiger" //"WEB-COMMUNICATIONS"
 }
  // input chat room and username
 
