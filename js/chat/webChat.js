@@ -1,4 +1,4 @@
-var server = new  MyClient();
+var server = new  SillyClient();
 if (false){
     var user_name=prompt("Please input your name","xuzhang")
     console.log(user_name)
@@ -12,25 +12,23 @@ else {
 }
  // input chat room and username
 
-
 var chat_history = []
 var user_id = null
 // chart_history and user Id
 
 
 // server.connect( "wss://ecv-etic.upf.edu/node/9000/ws", chat_room);
-server.connect( "ws://localhost:9004", chat_room);
+server.connect( "ws://localhost:55000", chat_room);
 
 server.on_ready = function( my_id )
 {
     console.log("I am ready!",my_id)
     user_id = my_id
-
 	// store my user_id
 }
 
 // document.querySelector("#user-name").textContent = user_name
-document.querySelector("#chat-room").textContent = chat_room
+// document.querySelector("#chat-room").textContent = chat_room
 // document.querySelector(".name").textContent = chat_room
 //  set username and chatroom of the UI
 server.on_user_connected = function (user_id) {
@@ -117,5 +115,8 @@ server.on_message = function (author_id, str_msg){
             chat_list_box.appendChild(my_message)
         }
         chat_list_box.scrollTop = 100000
+    }
+    else if (msg_type== "create_avater"){
+        console.log(msg)
     }
 }

@@ -2,7 +2,7 @@ var scene = null;
 var renderer = null;
 var camera = null;
 var character = null;
-
+var global_username = user_name
 var animations = {};
 var animation = null;
 
@@ -71,9 +71,7 @@ function create_avater(username, avatar_name,position, avatar_scale, ttscene){
 	});
 	girl_pivot.addChild( girl_selector );
 
-
 		//load some animations
-
 	function loadAnimation( name, action , url )
 	{
 		var anim = animations[name][action] = new RD.SkeletalAnimation();
@@ -92,6 +90,23 @@ function create_avater(username, avatar_name,position, avatar_scale, ttscene){
     	'avatar_name':avatar_name, 
     	'username':username
     }
+
+    create_message = {
+    	'username':username,
+    	'avatar_name':avatar_name, 
+    	'positon': girl_pivot.position
+    }
+      var msg = {
+         type:'create_avater',
+        username: user_name,
+        content: create_message
+    }
+
+    if (user_name==global_username){
+    server.sendMessage(msg)
+    }
+
+
 
 	return [girl, girl_pivot]
 
@@ -129,7 +144,14 @@ function init()
 		});
 	mat.register("girl");
 
-	girl_obj = create_avater("girl", "girl",[-130,25,-85],0.3,scene)
+	var options_avatar = ['girl','tiger']
+	avatar_name = options_avatar[Math.round(Math.random()*10)%2]
+	offset_width = Math.round(Math.random()*100-50)
+	offset_long = Math.round(Math.random()*100-50)
+	position = [-20+offset_width,-35,10+offset_long]
+
+
+	girl_obj = create_avater(global_username, avatar_name, position, 0.3,scene)
 	girl = girl_obj[0]
 	girl_pivot = girl_obj[1]
 	character = girl;
@@ -137,7 +159,7 @@ function init()
 
 	
 	//load a GLTF for the room
-	create_avater("tiger","tiger",[-208,-35,10], 1.7,scene)
+	// create_avater("tiger","tiger",[-208,-35,10], 1.7,scene)
 
 
 	var room = new RD.SceneNode({scaling:40,position:[0,-.01,0]});
@@ -213,7 +235,7 @@ function init()
 	function collect_keys() {
 		var keys = {}
 		for(username in all_avaters){
-			if(username=='girl'){
+			if(username==global_username){
 		        press_key=null
 		        keysets = ['UP','DOWN','LEFT','RIGHT']
 		        for(var i=0;i<keysets.length;i++){
@@ -224,17 +246,17 @@ function init()
 		        }
 		        keys[username] = press_key
 			}
-			if(username=='tiger'){
-			    press_key=null
-		        var keymap = {"W":"UP",'S':"DOWN",'A':"LEFT",'D':"RIGHT"}
-		        for(key in keymap){
-		        	if(gl.keys[key]){
-		        		press_key = keymap[key]
-		        		break
-		        	}
-		        }
-		        keys[username] = press_key
-			}
+			// if(username=='tiger'){
+			//     press_key=null
+		 //        var keymap = {"W":"UP",'S':"DOWN",'A':"LEFT",'D':"RIGHT"}
+		 //        for(key in keymap){
+		 //        	if(gl.keys[key]){
+		 //        		press_key = keymap[key]
+		 //        		break
+		 //        	}
+		 //        }
+		 //        keys[username] = press_key
+			// }
 			// receive from remote
 		}
 		return keys
