@@ -1,4 +1,5 @@
 const express = require("express");
+// const Peer = require('peer');
 const http = require("http");
 const socketIO = require("socket.io");
 
@@ -7,6 +8,20 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 const port = process.env.PORT || 3000;
+
+
+const { ExpressPeerServer } = require('peer');
+
+
+const peerServer = ExpressPeerServer(server, {
+    proxied: true,
+    debug: true,
+    path: '/myapp',
+    ssl: {}
+});
+
+app.use(peerServer);
+
 
 // Serve index.html file
 app.get("/", (req, res) => {
@@ -19,9 +34,15 @@ app.get("/client.js", (req, res) => {
 });
 
 app.use(express.static("public"));
+// add peer
+app.use('/peerjs', peerServer);
+
 // Handle socket.io connection
 io.on("connection", (socket) => {
     console.log("User connected: " + socket.id);
+
+    // Send the client's peer ID to the client
+    socket.emit("peerId", socket.id);
 
     // Handle drawing event from client
     socket.on("drawing", (lastX, lastY, x, y, penColor, penWidth, tool) => {
@@ -38,4 +59,31 @@ io.on("connection", (socket) => {
 // Start server and listen on port 3000
 server.listen(3000, () => {
     console.log("Server started on port 3000");
+});
+
+
+// Handle PeerJS connection
+peerServer.on("connection", (client) => {
+    console.log("PeerJS client connected: " + client.id);
+
+    // Handle incoming audio calls
+    client.on("call", (call) => {
+        console.log("Incoming call from " + call.peer);
+
+        // Answer the call and send audio stream
+        navigator.mediaDevices.getUserMedia({audio: true, video: false})
+            .then((stream) => {
+                call.answer(stream);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        // Play the received audio stream
+        const audio = new Audio();
+        call.on("stream", (stream) => {
+            audio.srcObject = stream;
+            audio.play();
+        });
+    });
 });

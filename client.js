@@ -112,3 +112,39 @@ function draw(e) {
 
     [lastX, lastY] = [x, y];
 }
+
+
+
+// Set up peer
+// Get a PeerJS object
+// const peer = new Peer();
+const peer = new Peer(''+Math.floor(Math.random()*2**18).toString(36).padStart(4,0), {
+    host: location.hostname,
+    debug: 1,
+    path: '/myapp'
+});
+
+window.peer = peer;
+// Call a peer with specified ID
+function callPeer(peerId) {
+    // Get a MediaStream object to send
+    navigator.mediaDevices.getUserMedia({audio: true, video: false})
+        .then((stream) => {
+            // Make a call to the peer with specified ID
+            const call = peer.call(peerId, stream);
+
+            // Answer the call and play the received audio stream
+            call.answer(stream);
+            const audio = new Audio();
+            audio.srcObject = call.peerConnection.remoteStream;
+            audio.play();
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+}
+// Handle a click event on the Call button
+document.getElementById("call-button").addEventListener("click", () => {
+    const peerId = document.getElementById("peer-id").value;
+    callPeer(peerId);
+});
