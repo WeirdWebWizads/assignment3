@@ -9,6 +9,35 @@ var animation = null;
 var walkarea = null;
 
 avaters = []
+walkarea = new WalkArea();
+walkarea.addRect([-50,0,-30],80,50);
+walkarea.addRect([-90,0,-10],80,20);
+walkarea.addRect([-110,0,-30],40,50);
+walkarea.addRect([-210,25,35],80,-120);
+walkarea.addRect([-130,25+50,-75],110,-80);
+
+
+stairs1_area = new WalkArea()
+stairs1_area.addRect([-210,25,35],80,-120);
+stairs2_area = new WalkArea()
+stairs2_area.addRect([-130,25+50,-75],110,-80);
+
+function adjust_height(position){
+	is_instairs1 = stairs1_area.isInsideArea(position)
+	if (is_instairs1){
+		//stairs1_area.addRect([-210,25,35],80,-120);
+		return  (-35 + (35-position[2])*0.5)
+	}
+	is_instairs2 = stairs2_area.isInsideArea(position)
+	if (is_instairs2){
+		// stairs2_area.addRect([-130,25,-85],110,-80);
+		return  (25 + (position[0]+130)*(50/110))
+	}
+	
+	return position[1]
+
+
+}
 
 function create_avater(name,position,scene){
 	//var avatar = "tiger";
@@ -23,12 +52,13 @@ function create_avater(name,position,scene){
 
 	//create pivot point for the girl
 	var girl_pivot = new RD.SceneNode({
-		position: [-40,0,-12]
+		// position: [-40,-35,-12]
+		position: [-208,-35,10]
 	});
 
 	//create a mesh for the girl
 	var avatar = "tiger";
-	var avatar_scale = 1;
+	var avatar_scale = 1.7;
 	var girl = new RD.SceneNode({
 		scaling: avatar_scale,
 		mesh: avatar + "/" + avatar +".wbin",
@@ -67,7 +97,7 @@ function create_avater(name,position,scene){
 function init()
 {
 	//create the rendering context
-	var context = GL.create({width: window.innerWidth, height:window.innerHeight});
+	var context = GL.create({canvas:"canvas"});
 
 	//setup renderer
 	renderer = new RD.Renderer(context);
@@ -75,7 +105,7 @@ function init()
 	renderer.autoload_assets = true;
 
 	//attach canvas to DOM
-	document.body.appendChild(renderer.canvas);
+	// document.body.appendChild(renderer.canvas);
 
 	//create a scene
 	scene = new RD.Scene();
@@ -101,12 +131,13 @@ function init()
 
 	//create pivot point for the girl
 	var girl_pivot = new RD.SceneNode({
-		position: [-40,0,0]
+		// position: [-20,-35,0]
+		position: [-130,25,-85]
 	});
 
 	//create a mesh for the girl
 	var avatar = "girl";
-	var avatar_scale = 0.3;
+	var avatar_scale = 1.2;
 	var girl = new RD.SceneNode({
 		scaling: 0.3,
 		mesh: avatar + "/" + avatar +".wbin",
@@ -129,16 +160,11 @@ function init()
 	girl2_obj = create_avater("girl2",[0,60,0], scene)
 	girl2 = girl2_obj[0]
 	girl2_pivot = girl2_obj[1]
-	// avaters.push(girl2_obj[0])
 
-	walkarea = new WalkArea();
-	walkarea.addRect([-50,0,-30],80,50);
-	walkarea.addRect([-90,0,-10],80,20);
-	walkarea.addRect([-110,0,-30],40,50);
 
 
 	character = girl;
-
+	character_pivot =girl_pivot
 	//load some animations
 	function loadAnimation( name, url )
 	{
@@ -162,8 +188,8 @@ function init()
 
 	//main draw function
 	context.ondraw = function(){
-		gl.canvas.width = document.body.offsetWidth;
-		gl.canvas.height = document.body.offsetHeight;
+		gl.canvas.width = document.body.offsetWidth*0.8;
+		gl.canvas.height = document.body.offsetHeight*0.8;
 		gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
 
 		var girlpos = girl_pivot.localToGlobal([0,40,0]);
@@ -187,6 +213,7 @@ function init()
 	}
 
 
+    
 	function update_avater(avatar_obj,obj_pivot,dt){
 		var t = getTime();
 		var anim = animations['tiger_idle'];
@@ -209,7 +236,11 @@ function init()
 
 		var pos = obj_pivot.position;
 		var nearest_pos = walkarea.adjustPosition( pos );
-		obj_pivot.position = nearest_pos;
+
+		
+		obj_pivot.position[1] = adjust_height(obj_pivot.position)
+		
+		// obj_pivot.position = nearest_pos;
 
 		anim.assignTime( t * 0.001 * time_factor );
 		avatar_obj.skeleton.copyFrom(anim.skeleton)
@@ -217,6 +248,7 @@ function init()
 	}
 
 	//main update
+	last_turnover = -100
 	context.onupdate = function(dt)
 	{
 		//not necessary but just in case...
@@ -233,20 +265,29 @@ function init()
 			anim = animations.walking;
 		}
 		else if(gl.keys["DOWN"])
-		{
-			girl_pivot.moveLocal([0,0,-1]);
-
+		{   delta = t - last_turnover
+			console.log(delta)
+			if (delta>200){
+				girl_pivot.rotate(135,[0,1,0]);
+			}
+			last_turnover = t
+			girl_pivot.moveLocal([0,0,1]);
+            
 			anim = animations.walking;
 			time_factor = -1;
 		}
 		if(gl.keys["LEFT"])
+		{
+			
 			girl_pivot.rotate(90*DEG2RAD*dt,[0,1,0]);
+		}
 		else if(gl.keys["RIGHT"])
 			girl_pivot.rotate(-90*DEG2RAD*dt,[0,1,0]);
 
 		var pos = girl_pivot.position;
 		var nearest_pos = walkarea.adjustPosition( pos );
-		girl_pivot.position = nearest_pos;
+		girl_pivot.position[1] = adjust_height(pos)
+		// girl_pivot.position = nearest_pos;
 
 		//move bones in the skeleton based on animation
 		anim.assignTime( t * 0.001 * time_factor );
@@ -273,12 +314,12 @@ function init()
 			var ray = camera.getRay(e.canvasx, e.canvasy);
 			var node = scene.testRay( ray, null, 10000, 0b1000 );
 			console.log(node);
-			/*
+			
 			if( ray.testPlane( RD.ZERO, RD.UP ) ) //collision with infinite plane
 			{
 				console.log( "floor position clicked", ray.collision_point );
 			}
-			*/
+			
 		}
 	}
 
