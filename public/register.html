@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Register</title>
+		<link rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+			integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+			crossorigin="anonymous" referrerpolicy="no-referrer">
+		<link href="style.css" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<div class="register">
+			<h1>Register</h1>
+			<div id="error-message" class="alert alert-danger" role="alert"
+				style="display: none;"></div>
+			<form id="register-form" action="/reg" method="post">
+				<label for="username">
+					<i class="fas fa-user"></i>
+				</label>
+				<input type="text" name="username" placeholder="Username" id="username"
+					required>
+				<label for="password">
+					<i class="fas fa-lock"></i>
+				</label>
+				<input type="password" name="password" placeholder="Password" id="password"
+					required>
+				<p>Avatar</p>
+				<select class="form-select" aria-label="Default select example"
+					name="avatar" id="avatar" required>
+					<option value="images/main_characters/Mask_Dude/" selected>Mask Dude</option>
+					<option value="images/main_characters/Ninja_Frog/">Ninja Frog</option>
+					<option value="images/main_characters/Pink_Man/">Pink Man</option>
+					<option value="images/main_characters/Virtual_Guy/">Virtual Guy</option>
+				</select>
+				<!--<label for="email">
+					<i class="fas fa-envelope"></i>
+				</label>
+				<input type="email" name="email" placeholder="Email" id="email" required>-->
+				<input type="submit" value="Register">
+				<!--<p class="register">ALready registered? <a href="/login">Login here!</a></p>-->
+			</form>
+			<input type="submit" value="Login" class="button_active"
+				onclick="location.href='/login';" />
+		</div>
+		<script src="./register.js"></script>
+	</body>
+</html>

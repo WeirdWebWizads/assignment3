@@ -1,0 +1,11 @@
+{
+    "default_room": "apartment",
+    "rooms": {
+        "apartment": {
+            "id": 0,
+            "name": "apartment",
+            "url": "public/data/vr_apartment",
+            "people": []
+        }
+    }
+}
