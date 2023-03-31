@@ -36,7 +36,7 @@ var ChatClient = {
         console.log(msg_type, other_user_id, msg)
         var my_message = document.createElement("div")
         my_message.classList.add('message_row')
-        my_message.innerHTML = "<div class=\"username\">" + other_user_id + "</div><div class=\"other-message message-text\">" + msg + "</div>"
+        my_message.innerHTML = "<div class=\"username\">" + other_user_id + "</div><div class=\"other-message message-text small p-2 ms-3 mb-1 rounded-3\">" + msg + "</div>"
         this.chat_list_box.appendChild(my_message)
         this.chat_list_box.scrollTop = 100000
         this.chat_history.push(str_msg)
@@ -53,10 +53,10 @@ var ChatClient = {
             var my_message = document.createElement("div")
             my_message.classList.add('message_row')
             if (username == user_name){
-                my_message.innerHTML = "<div class=\"you-message message-text\">"+text+"</div>"
+                my_message.innerHTML = "<div class=\"you-message message-text small p-2 me-3 mb-1 text-white rounded-3 bg-primary\">"+text+"</div>"
             }
             else{
-                my_message.innerHTML = "<div class=\"username\">" + username + "</div><div class=\"other-message message-text\">" + text + "</div>"
+                my_message.innerHTML = "<div class=\"username\">" + username + "</div><div class=\"other-message message-text small p-2 ms-3 mb-1 rounded-3\">" + text + "</div>"
             }
             this.chat_list_box.appendChild(my_message)
         }
@@ -69,7 +69,7 @@ var ChatClient = {
             var message = sendMsg.value
       var my_message = document.createElement("div")
       my_message.classList.add('message_row')
-      my_message.innerHTML = "<div class=\"you-message message-text\">"+message+"</div>"
+      my_message.innerHTML = "<div class=\"you-message message-text small p-2 me-3 mb-1 text-white rounded-3 bg-primary\">"+message+"</div>"
       chat_list_box.appendChild(my_message)
         chat_list_box.scrollTop = 100000
         document.querySelector(".sendMsg").value = ''
@@ -191,9 +191,10 @@ var SERVER = {
         author_id = tokens[0]
         cmd = tokens[1]
         data = tokens[2]
-
+        console.log(data)
         if ((cmd==undefined)||(data==undefined)){
         author_id = ''
+
         this.game_message(msg.data);
         }
         else {
