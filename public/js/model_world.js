@@ -37,10 +37,16 @@ function Room(name) {
     this.people = [];
 }
 
-Room.prototype.addUser = function (user) {
-    this.people.push(user); // Just push the user into the people array
-    user.room = this;
+Room.prototype.addUser = function(user) {
+    return new Promise((resolve, reject) => {
+        this.people.push(user); // Just push the user into the people array
+        user.room = this;
+
+        // Call resolve() when the user is added successfully
+        resolve();
+    });
 }
+
 Room.prototype.toJSON = function () {
     return {
         id: this.id,
@@ -77,17 +83,22 @@ var WORLD = {
 
     getRoom: function (name) { return this.rooms[name]; },
 
-    addUser: function (user, room) {
-    this.users.push(user);
-    this.users_by_id[user.name] = user;
-    this.users_by_id[user.id] = user;
+    addUser: async function (user, room) {
+        this.users.push(user);
+        this.users_by_id[user.name] = user;
+        this.users_by_id[user.id] = user;
 
-    if (room) {
-        console.log("Room: ", room)
-        room.addUser(user);
-        this.rooms[room.name] = room; // Move this line here
-    }
-},
+        if (room) {
+            console.log("Room: ", room);
+
+            // Assuming room.addUser returns a Promise
+            await room.addUser(user);
+
+            this.rooms[room.name] = room;
+            console.log("Rooms: ", this.rooms);
+        }
+    },
+    
 
 
     removeUser: function (user) {

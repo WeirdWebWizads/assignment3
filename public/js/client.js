@@ -81,7 +81,6 @@ var CLIENT = {
         var room = WORLD.getRoom(roomJson.name) || WORLD.createRoom(roomJson.name, roomJson);
         WORLD.addUser(APP.my_user, room);
         APP.current_room = room;
-
     },
 
     handleJoin: function (json) {

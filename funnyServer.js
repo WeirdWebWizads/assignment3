@@ -70,15 +70,17 @@ const FUNNYSERVER = {
     },
 
     sendToRoomUsers: function (room, msg, skip_user) {
-        room.people.forEach(user_id => {
-            console.log(user_id)
-            const user = WORLD.getUser(user_id);
-            console.log(user)
+        console.log("sending to rooms")
+        WORLD.users.forEach(userwolrd => {
+            //console.log(user_id)
+            const user = WORLD.getUser(userwolrd.name);
+            //console.log(user)
             if (!user || user === skip_user) {
+
                 return;
             }
             user._connection.sendUTF(msg);
-            console.log("sending msg ", msg)
+            //console.log("sending msg ", msg)
         });
     },
 
