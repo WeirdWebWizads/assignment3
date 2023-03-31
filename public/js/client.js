@@ -11,6 +11,10 @@ var CLIENT = {
         this.socket.onclose = this.onClose.bind(this);
         this.socket.onmessage = this.onMessage.bind(this);
         this.socket.onerror = this.onError.bind(this);
+        this.socket.sendMessage = this.sendMessage.bind(this);
+        this.socket.startSendingTicks = this.startSendingTicks.bind(this);
+        this.socket.stopSendingTicks = this.stopSendingTicks.bind(this);
+        this.socket.onTick = this.onTick.bind(this);
     },
 
     onOpen: function () {
@@ -42,6 +46,40 @@ var CLIENT = {
         console.log("sending tick status");
     },
 
+    sendMessage: function (msg, target_ids) {
+        if (msg === null)
+            return;
+
+        if (msg.constructor === Object)
+            msg = JSON.stringify(msg);
+
+        if(!CLIENT.socket || this.socket.readyState !== WebSocket.OPEN)
+        {
+            //console.error("Not connected, cannot send info");
+            return;
+        }
+
+        //pack target info
+        if (target_ids) {
+            var target_str = "@" + (target_ids.constructor === Array ? target_ids.join(",") : target_ids) + "|";
+            if (msg.constructor === String)
+                msg = target_str + msg;
+            else
+                throw ("targeted not supported in binary messages");
+        }
+        try{
+            console.log(msg)
+            this.socket.send(msg);
+        } catch(error){
+            console.error(msg.type)
+            console.error(msg)
+            console.error(error);
+        }
+
+        
+        this.info_transmitted += 1;
+    },
+
     onMessage: function (msg) {
         console.log("Server-Client (onMessage): A client has received a message: ", msg);
 
@@ -68,13 +106,19 @@ var CLIENT = {
             case "left":
                 this.handleLeft(json);
                 break;
+            case "create_avater":
+                this.handleCreateAvatar(json);
+                break;
+            case "move":
+                this.handleMove(json);
+                break;
             default:
                 console.log("Unhandled message type:", json.type);
         }
     },
 
     handleEnter: function (json) {
-        
+
         var userJson = json.user;
         APP.my_user = new User(userJson);
         var roomJson = json.room;
@@ -114,6 +158,26 @@ var CLIENT = {
         if (user) {
             WORLD.removeUser(user);
         }
+    },
+
+    handleCreateAvatar: function (json) {
+        console.log("new avatar come in:")
+        console.log(msg)
+
+        create_avater(msg['username'], msg['avatar_name'], msg['position'], msg['scale'], scene)
+    },
+
+    handleMove: function (json) {
+        console.log("Avatar moving")
+        // console.log(msg)
+        username = msg['username']
+        key = msg['key']
+        dt = msg['dt']
+        avatar_name = all_avaters[username]['avatar_name']
+        avatar_obj = all_avaters[username]['avatar']
+        pivot = all_avaters[username]['pivot']
+
+        update_avater(avatar_name, key, avatar_obj, pivot, dt)
     },
 
     onError: function (error) {
