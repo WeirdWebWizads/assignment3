@@ -18,13 +18,14 @@ var user_id = null
 
 
 // server.connect( "wss://ecv-etic.upf.edu/node/9000/ws", chat_room);
-server.connect( "ws://localhost:55000", chat_room);
+// server.connect( "ws://localhost:55000", chat_room);
 
 server.on_ready = function( my_id )
 {
     console.log("I am ready!",my_id)
     user_id = my_id
 	// store my user_id
+    tell_other_people(user_name)
 }
 
 // document.querySelector("#user-name").textContent = user_name
@@ -45,6 +46,7 @@ server.on_user_connected = function (user_id) {
     }
     console.log(msg)
     server.sendMessage(msg,[user_id])
+    tell_other_people(global_username)
 }
 
 var sendMsg = document.querySelector(".sendMsg")
@@ -116,7 +118,23 @@ server.on_message = function (author_id, str_msg){
         }
         chat_list_box.scrollTop = 100000
     }
-    else if (msg_type== "create_avater"){
+    else if (msg_type == "create_avater"){
+        console.log("new avatar come in:")
         console.log(msg)
+
+        create_avater(msg['username'], msg['avatar_name'],msg['position'], msg['scale'], scene)
     }
+    else if (msg_type == "move"){
+        // console.log("new avatar come in:")
+        // console.log(msg)
+        username = msg['username']
+        key = msg['key']
+        dt = msg['dt']
+        avatar_name = all_avaters[username]['avatar_name']
+        avatar_obj = all_avaters[username]['avatar']
+        pivot = all_avaters[username]['pivot']
+
+        update_avater(avatar_name,key, avatar_obj,pivot,dt)
+    }
+
 }

@@ -87,29 +87,89 @@ function create_avater(username, avatar_name,position, avatar_scale, ttscene){
     all_avaters[username] = {
     	'avatar':girl,
     	'pivot': girl_pivot,
+    	'scale': avatar_scale,
     	'avatar_name':avatar_name, 
     	'username':username
-    }
-
-    create_message = {
-    	'username':username,
-    	'avatar_name':avatar_name, 
-    	'positon': girl_pivot.position
-    }
-      var msg = {
-         type:'create_avater',
-        username: user_name,
-        content: create_message
-    }
-
-    if (user_name==global_username){
-    server.sendMessage(msg)
     }
 
 
 
 	return [girl, girl_pivot]
 
+}
+
+	function update_avater(avatar_name,key, avatar_obj,obj_pivot,dt){
+		var t = getTime();
+		var anim = animations[avatar_name]['idle'];
+		var time_factor = 1;
+		if(key=='UP')
+		{
+			obj_pivot.moveLocal([0,0,1])
+			anim = animations[avatar_name]['walking'];
+		}
+		else if(key=='DOWN')
+		{
+			obj_pivot.moveLocal([0,0,-1])
+			anim = animations[avatar_name]['walking'];
+			time_factor = -1;
+		}
+		if(key=='LEFT')
+			obj_pivot.rotate(90*DEG2RAD*dt,[0,1,0]);
+		else if(key=='RIGHT')
+			obj_pivot.rotate(-90*DEG2RAD*dt,[0,1,0]);
+
+		var pos = obj_pivot.position;
+		var nearest_pos = walkarea.adjustPosition( pos );
+
+		obj_pivot.position[1] = adjust_height(obj_pivot.position)
+		
+		// obj_pivot.position = nearest_pos;
+
+		anim.assignTime( t * 0.001 * time_factor );
+		avatar_obj.skeleton.copyFrom(anim.skeleton)
+	}
+
+function tell_other_people(username) {
+	// body...
+	avatar_name = all_avaters[username]['avatar_name']
+	position = all_avaters[username]['pivot'].position
+	scale = all_avaters[username]['scale']
+	    create_message = {
+    	'username':username,
+    	'avatar_name':avatar_name, 
+    	'position': position,
+    	'scale': scale
+    }
+      var msg = {
+         type:'create_avater',
+        username: username,
+        content: create_message
+    }
+
+    console.log("create_avater:")
+    console.log(msg)
+    server.sendMessage(msg)
+}
+
+function tell_people_move(username,key,dt) {
+	// body...
+	avatar_name = all_avaters[username]['avatar_name']
+	// position = all_avaters[username]['pivot'].position
+	// scale = all_avaters[username]['scale']
+	    move_message = {
+    	'username':username,
+    	'key':key,
+    	'dt':dt
+    }
+      var msg = {
+         type:'move',
+        username: username,
+        content: move_message
+    }
+
+    // console.log("move avatar:")
+    // console.log(msg)
+    server.sendMessage(msg)
 }
 
 
@@ -148,7 +208,7 @@ function init()
 	avatar_name = options_avatar[Math.round(Math.random()*10)%2]
 	offset_width = Math.round(Math.random()*100-50)
 	offset_long = Math.round(Math.random()*100-50)
-	position = [-20+offset_width,-35,10+offset_long]
+	position = [-20+offset_width,-35,10]
 
 
 	girl_obj = create_avater(global_username, avatar_name, position, 0.3,scene)
@@ -156,7 +216,6 @@ function init()
 	girl_pivot = girl_obj[1]
 	character = girl;
 	character_pivot =girl_pivot
-
 	
 	//load a GLTF for the room
 	// create_avater("tiger","tiger",[-208,-35,10], 1.7,scene)
@@ -167,6 +226,10 @@ function init()
 	scene.root.addChild(room);
 	var gizmo = new RD.Gizmo();
 	gizmo.mode = RD.Gizmo.ALL;
+
+
+	server.connect( "ws://localhost:55000", chat_room);
+
 
 	// main loop ***********************
 
@@ -198,36 +261,6 @@ function init()
 
 
     
-	function update_avater(avatar_name,key, avatar_obj,obj_pivot,dt){
-		var t = getTime();
-		var anim = animations[avatar_name]['idle'];
-		var time_factor = 1;
-		if(key=='UP')
-		{
-			obj_pivot.moveLocal([0,0,1])
-			anim = animations[avatar_name]['walking'];
-		}
-		else if(key=='DOWN')
-		{
-			obj_pivot.moveLocal([0,0,-1])
-			anim = animations[avatar_name]['walking'];
-			time_factor = -1;
-		}
-		if(key=='LEFT')
-			obj_pivot.rotate(90*DEG2RAD*dt,[0,1,0]);
-		else if(key=='RIGHT')
-			obj_pivot.rotate(-90*DEG2RAD*dt,[0,1,0]);
-
-		var pos = obj_pivot.position;
-		var nearest_pos = walkarea.adjustPosition( pos );
-
-		obj_pivot.position[1] = adjust_height(obj_pivot.position)
-		
-		// obj_pivot.position = nearest_pos;
-
-		anim.assignTime( t * 0.001 * time_factor );
-		avatar_obj.skeleton.copyFrom(anim.skeleton)
-	}
 
 	//main update
 	last_turnover = -100
@@ -267,16 +300,26 @@ function init()
 		scene.update(dt);
 
 		var press_keys = collect_keys()
-
+        
 		// update_avater('girl',press_key, girl,girl_pivot,dt)
 		// update_avater('tiger', press_key, girl2, girl2_pivot, dt)
+				press_key=null
+		        keysets = ['UP','DOWN','LEFT','RIGHT']
+		        for(var i=0;i<keysets.length;i++){
+		        	if(gl.keys[keysets[i]]){
+		        		press_key = keysets[i]
+		        		break
+		        	}
+		        }
+        	// avatar = all_avaters[global_username]['avatar']
+        	// pivot = all_avaters[global_username]['pivot']
+        	avatar_name = all_avaters[global_username]['avatar_name']
+        	update_avater(avatar_name, press_key, girl, girl_pivot, dt)
+            if(press_key!=null){
+            	tell_people_move(global_username,press_key,dt)
+            }
+        	
 
-        for(username in all_avaters){
-        	avatar = all_avaters[username]['avatar']
-        	pivot = all_avaters[username]['pivot']
-        	avatar_name = all_avaters[username]['avatar_name']
-        	update_avater(avatar_name, press_keys[username],avatar,pivot,dt)
-        }
 	}
 
 	//user input ***********************
