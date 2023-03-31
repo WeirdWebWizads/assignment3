@@ -8,7 +8,7 @@ let lastY = 0;
 let penColor = "#000000";
 let penWidth = 5;
 let tool = "pen";
-
+var my_stream = null;
 // Listen for click events on the canvas
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mouseup", stopDrawing);
@@ -116,35 +116,124 @@ function draw(e) {
 
 
 // Set up peer
-// Get a PeerJS object
-// const peer = new Peer();
-const peer = new Peer(''+Math.floor(Math.random()*2**18).toString(36).padStart(4,0), {
-    host: location.hostname,
-    debug: 1,
-    path: '/myapp'
+// Get references to HTML elements
+const callButton = document.getElementById("callButton");
+const chatIdInput = document.getElementById("chatId");
+const localAudio = document.getElementById("localAudio");
+const remoteAudio = document.getElementById("remoteAudio");
+
+// Create Peer object
+const peer = new Peer(undefined, {
+    host: "/",
+    port: "443",
+    path: "/myapp",
 });
 
-window.peer = peer;
-// Call a peer with specified ID
-function callPeer(peerId) {
-    // Get a MediaStream object to send
-    navigator.mediaDevices.getUserMedia({audio: true, video: false})
-        .then((stream) => {
-            // Make a call to the peer with specified ID
-            const call = peer.call(peerId, stream);
+// Listen for when Peer object successfully connects to PeerJS server
+peer.on("open", function(id) {
+    console.log('My peer ID is: ' + id);
+});
 
-            // Answer the call and play the received audio stream
-            call.answer(stream);
-            const audio = new Audio();
-            audio.srcObject = call.peerConnection.remoteStream;
-            audio.play();
+// Handle incoming media connection
+
+// Start media call function
+function startMediaCall(chatId) {
+    console.log('start media call')
+    // Get local media stream
+    navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+            console.log("Local stream ready");
+            localAudio.srcObject = stream;
+            my_stream = stream;
+            // Initiate call to remote peer and add local stream to call
+            const call = peer.call(chatId, my_stream );
+            call.on("stream", (remoteStream) => {
+                console.log("Received remote stream");
+                remoteAudio.srcObject = remoteStream;
+            });
         })
         .catch((error) => {
-            console.error(error);
+            console.log("Error accessing media devices", error);
         });
 }
-// Handle a click event on the Call button
-document.getElementById("call-button").addEventListener("click", () => {
-    const peerId = document.getElementById("peer-id").value;
-    callPeer(peerId);
+
+// Listen for call button click event and start media call
+callButton.addEventListener("click", (event) => {
+    const chatId = chatIdInput.value;
+    console.log('click');
+    startMediaCall(chatId);
 });
+
+// Select the call accept button
+const callAcceptBtn = document.getElementById("call-accept-btn");
+
+// Listen for clicks on the call accept button
+callAcceptBtn.addEventListener("click", () => {
+    // Answer the call and set the remote video stream as the source for the remote video element
+    const answerCall = peer.call(chatId, my_stream);
+    answerCall.on("stream", (remoteStream) => {
+        console.log("Answer");
+        remoteAudio.srcObject = remoteStream;
+    });
+});
+
+
+
+
+
+//to fetch id
+
+
+//connect to remote user
+// function connectToID(is_call)
+// {
+//     var id = document.querySelector("input").value;
+//     var conn = null;
+//     if(is_call)
+//         conn = peer.call( id, my_stream );
+//     else
+//         conn = peer.connect( id, my_stream );
+//
+//     conn.on('open', function() {
+//         // Receive messages
+//         conn.on('data', function(data) {
+//             console.log('Received', data);
+//             showMessage( data );
+//         });
+//
+//         // Send messages
+//         conn.send('Hello!');
+//     });
+//
+//     // if he answer my call, get his stream and show it
+//     conn.on('stream', function(remoteStream) {
+//         var video = document.querySelector("video#him");
+//         video.srcObject = remoteStream;
+//     });
+// }
+
+//to receive incomming connections
+peer.on('connection', function(conn) {
+    console.log("somebody connects to me!",conn);
+
+    conn.on('data', function(data) {
+        console.log('Received', data);
+
+    });
+});
+
+//incomming calls
+
+peer.on("call", (call) => {
+    console.log("Incoming call");
+
+    // Answer incoming call and add remote stream to remote audio element
+    call.answer(my_stream);
+    console.log('on peer')
+    call.on("stream", (remoteStream) => {
+        console.log("Received remote stream");
+        remoteAudio.srcObject = remoteStream;
+    });
+});
+

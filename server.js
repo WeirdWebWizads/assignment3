@@ -20,9 +20,6 @@ const peerServer = ExpressPeerServer(server, {
     ssl: {}
 });
 
-app.use(peerServer);
-
-
 // Serve index.html file
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
@@ -36,11 +33,14 @@ app.get("/client.js", (req, res) => {
 app.use(express.static("public"));
 // add peer
 app.use('/peerjs', peerServer);
+app.use(peerServer);
+
 
 // Handle socket.io connection
 io.on("connection", (socket) => {
     console.log("User connected: " + socket.id);
 
+    // Send the client's peer ID to the client
     // Send the client's peer ID to the client
     socket.emit("peerId", socket.id);
 
@@ -48,6 +48,12 @@ io.on("connection", (socket) => {
     socket.on("drawing", (lastX, lastY, x, y, penColor, penWidth, tool) => {
         // Broadcast drawing event to all other clients
         socket.broadcast.emit("drawing", lastX, lastY, x, y, penColor, penWidth, tool);
+    });
+
+    // Handle media call event from client
+    socket.on("mediaCall", (chatId) => {
+        console.log("Media call initiated with chatId: " + chatId);
+        startMediaCall(chatId);
     });
 
     // Handle disconnection event
@@ -62,28 +68,3 @@ server.listen(3000, () => {
 });
 
 
-// Handle PeerJS connection
-peerServer.on("connection", (client) => {
-    console.log("PeerJS client connected: " + client.id);
-
-    // Handle incoming audio calls
-    client.on("call", (call) => {
-        console.log("Incoming call from " + call.peer);
-
-        // Answer the call and send audio stream
-        navigator.mediaDevices.getUserMedia({audio: true, video: false})
-            .then((stream) => {
-                call.answer(stream);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-
-        // Play the received audio stream
-        const audio = new Audio();
-        call.on("stream", (stream) => {
-            audio.srcObject = stream;
-            audio.play();
-        });
-    });
-});
